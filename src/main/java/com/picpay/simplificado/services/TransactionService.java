@@ -2,9 +2,11 @@ package com.picpay.simplificado.services;
 
 import com.picpay.simplificado.domain.transaction.Transaction;
 import com.picpay.simplificado.domain.user.User;
+import com.picpay.simplificado.domain.user.UserType;
 import com.picpay.simplificado.dtos.TransactionDTO;
 import com.picpay.simplificado.repositories.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,7 +14,9 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class TransactionService {
@@ -21,6 +25,9 @@ public class TransactionService {
     private final TransactionRepository repository;
     private final RestTemplate restTemplate;
 
+    @Value("${authorization.url}")
+    private String authorizationUrl;
+
     @Autowired
     public TransactionService(UserService userService, TransactionRepository repository, RestTemplate restTemplate) {
         this.userService = userService;
@@ -28,14 +35,15 @@ public class TransactionService {
         this.restTemplate = restTemplate;
     }
 
-    public Transaction createTransaction(TransactionDTO transactionDTO) throws Exception {
-        User sender = this.userService.findById(transactionDTO.senderId());
-        User receiver = this.userService.findById(transactionDTO.receiverId());
-        BigDecimal amount = transactionDTO.value();
+    public Transaction createTransactionFromDTO(TransactionDTO dto) throws Exception {
+        User sender = this.userService.findById(dto.senderId());
+        User receiver = this.userService.findById(dto.receiverId());
+        BigDecimal amount = dto.value();
 
-        userService.validateTransaction(sender, amount);
+        this.validateTransaction(sender, amount);
+        boolean isAuthorized = this.authorizeTransaction();
 
-        if (!this.authorizeTransaction()) {
+        if (!isAuthorized) {
             throw new Exception("Transaction not authorized");
         }
 
@@ -45,15 +53,52 @@ public class TransactionService {
 
         this.userService.insert(sender);
         this.userService.insert(receiver);
-        return this.repository.save(transaction);
+        return this.insert(transaction);
+    }
+
+    public void validateTransaction(User sender, BigDecimal amount) throws Exception {
+        if (sender.getUserType().equals(UserType.MERCHANT)) {
+            throw new Exception("Sender can not to do transactions");
+        }
+        if (sender.getBalance().compareTo(amount) < 0) {
+            throw new Exception("Sender do not have enough money");
+        }
     }
 
     public boolean authorizeTransaction() throws Exception {
-        ResponseEntity<Map> response = restTemplate.getForEntity("https://util.devi.tools/api/v2/authorize", Map.class);
-
+        ResponseEntity<Map> response = restTemplate.getForEntity(authorizationUrl, Map.class);
         if (response.getStatusCode().equals(HttpStatus.OK)) {
-            return (Boolean) response.getBody().get("authorization");
+            Object authorization = response.getBody().get("authorization");
+            if (authorization instanceof Boolean) {
+                return (Boolean) authorization;
+            }
         }
         throw new Exception("Internal Server Error");
+    }
+
+    public Transaction findById(Long id) throws Exception {
+        Optional<Transaction> transaction = this.repository.findById(id);
+        return transaction.orElseThrow(() -> new Exception("Transaction not found"));
+    }
+
+    public List<Transaction> findAll() throws Exception {
+        return this.repository.findAll();
+    }
+
+    public Transaction insert(Transaction transaction) throws Exception {
+        return this.repository.save(transaction);
+    }
+
+    public void delete(Long id) throws Exception {
+        this.repository.deleteById(id);
+    }
+
+    public Transaction update(Long id, Transaction dto) throws Exception {
+        Transaction transaction = this.findById(id);
+        transaction.setSender(dto.getSender());
+        transaction.setReceiver(dto.getReceiver());
+        transaction.setAmount(dto.getAmount());
+        transaction.setMoment(dto.getMoment());
+        return this.insert(transaction);
     }
 }
