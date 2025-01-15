@@ -44,4 +44,16 @@ public class UserController {
                 .toUri();
         return ResponseEntity.created(location).body(user);
     }
+
+    @DeleteMapping(value = "/${id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) throws Exception {
+        this.service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping(value = "/{id}")
+    public ResponseEntity<User> update(@PathVariable Long id, @RequestBody UserDTO dto) throws Exception {
+        User user = this.service.update(id, dto);
+        return ResponseEntity.ok().body(user);
+    }
 }

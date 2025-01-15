@@ -93,12 +93,11 @@ public class TransactionService {
         this.repository.deleteById(id);
     }
 
-    public Transaction update(Long id, Transaction dto) throws Exception {
+    public Transaction update(Long id, TransactionDTO dto) throws Exception {
         Transaction transaction = this.findById(id);
-        transaction.setSender(dto.getSender());
-        transaction.setReceiver(dto.getReceiver());
-        transaction.setAmount(dto.getAmount());
-        transaction.setMoment(dto.getMoment());
+        transaction.setSender(userService.findById(dto.senderId()));
+        transaction.setReceiver(userService.findById(dto.receiverId()));
+        transaction.setAmount(dto.value());
         return this.insert(transaction);
     }
 }
