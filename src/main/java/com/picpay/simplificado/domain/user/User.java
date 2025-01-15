@@ -1,5 +1,6 @@
 package com.picpay.simplificado.domain.user;
 
+import com.picpay.simplificado.dtos.UserDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -40,4 +41,13 @@ public class User implements Serializable {
     @Enumerated(EnumType.STRING)
     private UserType userType;
 
+    public User(UserDTO userDTO) {
+        this.firstName = userDTO.firstName();
+        this.lastName = userDTO.lastName();
+        this.document = userDTO.document();
+        this.email = userDTO.email();
+        this.password = userDTO.password();
+        this.balance = userDTO.balance();
+        this.userType = userDTO.userType();
+    }
 }
