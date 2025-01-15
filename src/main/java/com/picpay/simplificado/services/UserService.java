@@ -20,10 +20,7 @@ public class UserService {
         this.repository = repository;
     }
 
-    public void validateTransaction(Transaction transaction) throws Exception {
-        User sender = transaction.getSender();
-        BigDecimal amount = transaction.getAmount();
-
+    public void validateTransaction(User sender, BigDecimal amount) throws Exception {
         if (sender.getUserType().equals(UserType.MERCHANT)) {
             throw new Exception("Sender can not to do transactions");
         }
