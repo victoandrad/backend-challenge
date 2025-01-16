@@ -45,7 +45,7 @@ public class UserController {
         return ResponseEntity.created(location).body(user);
     }
 
-    @DeleteMapping(value = "/${id}")
+    @DeleteMapping(value = "/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) throws Exception {
         this.service.delete(id);
         return ResponseEntity.noContent().build();
