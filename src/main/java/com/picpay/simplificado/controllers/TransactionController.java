@@ -1,7 +1,6 @@
 package com.picpay.simplificado.controllers;
 
 import com.picpay.simplificado.domain.transaction.Transaction;
-import com.picpay.simplificado.domain.user.User;
 import com.picpay.simplificado.dtos.TransactionDTO;
 import com.picpay.simplificado.services.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +22,7 @@ public class TransactionController {
         this.service = service;
     }
 
-    @GetMapping(value = "{id}")
+    @GetMapping(value = "/{id}")
     public ResponseEntity<Transaction> findById(@PathVariable Long id) throws Exception {
         Transaction transaction = this.service.findById(id);
         return ResponseEntity.ok().body(transaction);

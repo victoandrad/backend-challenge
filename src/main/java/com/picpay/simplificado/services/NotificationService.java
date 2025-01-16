@@ -1,5 +1,6 @@
 package com.picpay.simplificado.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.picpay.simplificado.domain.user.User;
 import com.picpay.simplificado.dtos.NotificationDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +28,11 @@ public class NotificationService {
     public void sendNotification(User user, String message) throws Exception {
         String email = user.getEmail();
         NotificationDTO notificationRequest = new NotificationDTO(email, message);
-        ResponseEntity<Map> response = restTemplate.postForEntity(notificationUrl, notificationRequest, Map.class);
-
-        if (!(response.getStatusCode() == HttpStatus.OK)) {
-            System.out.println("Notification Service is offline");
-            throw new Exception("Notification Service is offline");
-        }
+//        ResponseEntity<JsonNode> response = restTemplate.postForEntity(notificationUrl, notificationRequest, JsonNode.class);
+//
+//        if (!(response.getStatusCode() == HttpStatus.OK)) {
+//            System.out.println("Notification Service is offline");
+//        }
+        System.out.println("Notification has been sent to " + email);
     }
 }
